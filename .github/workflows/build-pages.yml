@@ -67,7 +67,7 @@ jobs:
           tmpfile=$(mktemp)
           echo '{"items":[' > "$tmpfile"
           first=1
-          jq -cr '.items[] | {id, full_name, html_url, name, owner, description, stargazers_count, updated_at}' site/data/repos.json | while IFS= read -r item; do
+          jq -cr '.items[] | {id, full_name, html_url, name, owner, description, stargazers_count, updated_at, created_at}' site/data/repos.json | while IFS= read -r item; do
             full_name=$(echo "$item" | jq -r '.full_name')
             if [ -z "$full_name" ] || [ "$full_name" = "null" ]; then
               # Skip if missing full_name (should not happen with Search API)
@@ -88,6 +88,45 @@ jobs:
           echo "Enrichment complete."
           rm -rf tmp
 
+      - name: Generate trend chart (SVG)
+        run: |
+          set -euo pipefail
+          mkdir -p site/assets
+          # Build monthly cumulative series from created_at
+          jq -r '.items[].created_at // empty' site/data/repos.json | cut -c1-7 | sort | uniq -c | awk '{printf "%s %s\n", $2, $1}' > series.txt || true
+          W=800; H=240; PL=48; PR=12; PT=20; PB=32
+          if [ ! -s series.txt ]; then
+            cat > site/assets/trend.svg <<SVG
+<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}' viewBox='0 0 ${W} ${H}'>
+  <rect x='0' y='0' width='${W}' height='${H}' fill='#ffffff'/>
+  <text x='${W/2}' y='${H/2}' text-anchor='middle' fill='#64748b' font-family='sans-serif' font-size='14'>No data</text>
+</svg>
+SVG
+          else
+            awk -v W=$W -v H=$H -v PL=$PL -v PR=$PR -v PT=$PT -v PB=$PB '
+              { m[NR]=$1; v[NR]=$2; n=NR }
+              END {
+                if (n==0) exit
+                max=0; for(i=1;i<=n;i++){ s+=v[i]; c[i]=s; if(c[i]>max) max=c[i] }
+                if (max==0) max=1
+                pw=W-PL-PR; ph=H-PT-PB; step=(n>1? pw/(n-1): pw)
+                printf("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"%d\" height=\"%d\" viewBox=\"0 0 %d %d\">\n", W,H,W,H)
+                printf("<rect x=\"0\" y=\"0\" width=\"%d\" height=\"%d\" fill=\"#ffffff\"/>\n", W,H)
+                # Axes
+                printf("<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke=\"#e5e7eb\"/>\n", PL, H-PB, W-PR, H-PB)
+                printf("<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke=\"#e5e7eb\"/>\n", PL, PT, PL, H-PB)
+                # Polyline points
+                points=""; for(i=1;i<=n;i++){ x=PL+step*(i-1); y=PT + (ph * (1 - (c[i]/max))); points=points sprintf("%s%.1f,%.1f", (i>1? " ":""), x, y) }
+                printf("<polyline fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2\" points=\"%s\"/>\n", points)
+                # Labels
+                printf("<text x=\"%d\" y=\"%d\" fill=\"#0f172a\" font-size=\"12\" font-family=\"sans-serif\" text-anchor=\"start\">%s</text>\n", PL, H-8, m[1])
+                printf("<text x=\"%d\" y=\"%d\" fill=\"#0f172a\" font-size=\"12\" font-family=\"sans-serif\" text-anchor=\"end\">%s</text>\n", W-PR, H-8, m[n])
+                printf("</svg>\n")
+              }
+            ' series.txt > site/assets/trend.svg
+          fi
+          rm -f series.txt
+
       - name: Generate and commit README stats
         env:
           KEYWORD: ${{ vars.KEYWORD }}
@@ -98,6 +137,15 @@ jobs:
           TOTAL=$(jq '.items | length' site/data/repos.json)
           UM=$(jq -r --arg kw "$KEYWORD" '[.items[] | select((((.full_name // "") + " " + (.name // "") + " " + (.description // "")) | ascii_downcase) | contains($kw)) ] | length' site/data/repos.json)
           TOPICS_TOTAL=$(jq -r '[.items[].topics[]?] | unique | length' site/data/repos.json)
+          TOTAL_STARS=$(jq -r '[.items[].stargazers_count // 0] | add // 0' site/data/repos.json)
+          MOST_JSON=$(jq -c '(.items | max_by(.stargazers_count // 0)) // {} | {name: .full_name, url: .html_url, stars: (.stargazers_count // 0)}' site/data/repos.json)
+          MOST_NAME=$(echo "$MOST_JSON" | jq -r '.name // "n/a"')
+          MOST_URL=$(echo "$MOST_JSON" | jq -r '.url // "#"')
+          MOST_STARS=$(echo "$MOST_JSON" | jq -r '.stars // 0')
+          NOW_EPOCH=$(date -u +%s)
+          LAST7=$(jq -r --argjson now $NOW_EPOCH '[.items[] | select(.updated_at) | (.updated_at | fromdateiso8601) | select(($now - .) <= (7*24*3600))] | length' site/data/repos.json)
+          LAST30=$(jq -r --argjson now $NOW_EPOCH '[.items[] | select(.updated_at) | (.updated_at | fromdateiso8601) | select(($now - .) <= (30*24*3600))] | length' site/data/repos.json)
+          LAST90=$(jq -r --argjson now $NOW_EPOCH '[.items[] | select(.updated_at) | (.updated_at | fromdateiso8601) | select(($now - .) <= (90*24*3600))] | length' site/data/repos.json)
 
           {
             echo '## Repo Statistics'
@@ -105,11 +153,25 @@ jobs:
             echo "- Repositories listed: $TOTAL"
             echo "- Repositories matching \"$KEYWORD\": $UM"
             echo "- Unique topics: $TOPICS_TOTAL"
+            echo "- Total stars: $TOTAL_STARS"
+            echo "- Most-starred: [$MOST_NAME]($MOST_URL) • ★ $MOST_STARS"
+            echo
+            echo 'Recent updates:'
+            echo "- Updated in last 7 days: $LAST7"
+            echo "- Updated in last 30 days: $LAST30"
+            echo "- Updated in last 90 days: $LAST90"
+            echo
+            echo 'Most recently updated:'
+            jq -r '[.items[] | select(.updated_at) | {name: .full_name, url: .html_url, updated: (.updated_at | fromdateiso8601)}] | sort_by(-.updated) | .[:5] | map("- [\(.name)](\(.url)) • \(.updated | strftime(\"%Y-%m-%d\"))") | .[]' site/data/repos.json
             echo
             echo 'Top topics:'
             jq -r '[.items[].topics[]?] | group_by(.) | map({topic: (.[0]), count: length}) | sort_by(-.count)[:10] | map("- \(.topic): \(.count)") | .[]' site/data/repos.json
             echo
-            echo "_Last updated: $NOW_"
+            echo "_Last updated: $NOW"
+            echo
+            echo 'Repo growth over time:'
+            echo
+            echo '![Repo growth](https://researchaiplus.github.io/community-projects/assets/trend.svg)'
           } > stats_body.md
 
           if grep -q '<!-- STATS:START -->' README.md; then

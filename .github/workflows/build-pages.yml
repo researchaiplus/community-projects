@@ -97,11 +97,11 @@ jobs:
           W=800; H=240; PL=48; PR=12; PT=20; PB=32
           if [ ! -s series.txt ]; then
             cat > site/assets/trend.svg <<SVG
-<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}' viewBox='0 0 ${W} ${H}'>
-  <rect x='0' y='0' width='${W}' height='${H}' fill='#ffffff'/>
-  <text x='${W/2}' y='${H/2}' text-anchor='middle' fill='#64748b' font-family='sans-serif' font-size='14'>No data</text>
-</svg>
-SVG
+            <svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}' viewBox='0 0 ${W} ${H}'>
+              <rect x='0' y='0' width='${W}' height='${H}' fill='#ffffff'/>
+              <text x='${W/2}' y='${H/2}' text-anchor='middle' fill='#64748b' font-family='sans-serif' font-size='14'>No data</text>
+            </svg>
+          SVG
           else
             awk -v W=$W -v H=$H -v PL=$PL -v PR=$PR -v PT=$PT -v PB=$PB '
               { m[NR]=$1; v[NR]=$2; n=NR }
@@ -143,9 +143,9 @@ SVG
           MOST_URL=$(echo "$MOST_JSON" | jq -r '.url // "#"')
           MOST_STARS=$(echo "$MOST_JSON" | jq -r '.stars // 0')
           NOW_EPOCH=$(date -u +%s)
-          LAST7=$(jq -r --argjson now $NOW_EPOCH '[.items[] | select(.updated_at) | (.updated_at | fromdateiso8601) | select(($now - .) <= (7*24*3600))] | length' site/data/repos.json)
-          LAST30=$(jq -r --argjson now $NOW_EPOCH '[.items[] | select(.updated_at) | (.updated_at | fromdateiso8601) | select(($now - .) <= (30*24*3600))] | length' site/data/repos.json)
-          LAST90=$(jq -r --argjson now $NOW_EPOCH '[.items[] | select(.updated_at) | (.updated_at | fromdateiso8601) | select(($now - .) <= (90*24*3600))] | length' site/data/repos.json)
+          LAST7=$(jq -r --argjson now $NOW_EPOCH '[.items[] | select(.updated_at) | (.updated_at | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime) | select(($now - .) <= (7*24*3600))] | length' site/data/repos.json)
+          LAST30=$(jq -r --argjson now $NOW_EPOCH '[.items[] | select(.updated_at) | (.updated_at | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime) | select(($now - .) <= (30*24*3600))] | length' site/data/repos.json)
+          LAST90=$(jq -r --argjson now $NOW_EPOCH '[.items[] | select(.updated_at) | (.updated_at | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime) | select(($now - .) <= (90*24*3600))] | length' site/data/repos.json)
 
           {
             echo '## Repo Statistics'
@@ -162,10 +162,10 @@ SVG
             echo "- Updated in last 90 days: $LAST90"
             echo
             echo 'Most recently updated:'
-            jq -r '[.items[] | select(.updated_at) | {name: .full_name, url: .html_url, updated: (.updated_at | fromdateiso8601)}] | sort_by(-.updated) | .[:5] | map("- [\(.name)](\(.url)) • \(.updated | strftime(\"%Y-%m-%d\"))") | .[]' site/data/repos.json
+            jq -r '[.items[] | select(.updated_at) | {name: .full_name, url: .html_url, updated: (.updated_at | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime)}] | sort_by(-.updated) | .[:5] | map("- [\(.name)](\(.url)) • \(.updated | strftime(\"%Y-%m-%d\"))") | .[]' site/data/repos.json
             echo
             echo 'Top topics:'
-            jq -r '[.items[].topics[]?] | group_by(.) | map({topic: (.[0]), count: length}) | sort_by(-.count)[:10] | map("- \(.topic): \(.count)") | .[]' site/data/repos.json
+            jq -r '[.items[].topics[]?] | sort | group_by(.) | map({topic: (.[0]), count: length}) | sort_by(-.count)[:10] | map("- \(.topic): \(.count)") | .[]' site/data/repos.json
             echo
             echo "_Last updated: $NOW"
             echo

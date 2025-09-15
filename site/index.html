@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Research AI Plus Repositories</title>
+    <style>
+      :root { --bg:#0b1020; --card:#121a33; --text:#e6eaf2; --muted:#9aa4b2; --accent:#7cc7ff; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: var(--bg); color: var(--text); }
+      header { padding: 24px; max-width: 1100px; margin: 0 auto; }
+      h1 { margin: 0 0 8px; font-size: 24px; }
+      p { margin: 0; color: var(--muted); }
+      #controls { display: flex; gap: 12px; margin-top: 16px; }
+      input, select { background: #0f1630; color: var(--text); border: 1px solid #2a355a; border-radius: 8px; padding: 10px 12px; width: 100%; }
+      main { max-width: 1100px; margin: 0 auto; padding: 16px 24px 40px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+      .card { background: var(--card); border: 1px solid #1c2749; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+      .card a { color: var(--accent); text-decoration: none; }
+      .meta { color: var(--muted); font-size: 12px; display: flex; gap: 12px; align-items: center; }
+      .topic { display: inline-block; background:#0f1630; border:1px solid #20305b; color:#b6c3d6; padding:2px 8px; border-radius:999px; font-size:12px; margin-right:6px; }
+      .empty { color: var(--muted); padding: 24px; text-align: center; border: 1px dashed #2a355a; border-radius: 10px; }
+      footer { color: var(--muted); text-align:center; font-size:12px; padding: 16px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Research AI Plus Repositories</h1>
+      <p>Auto-collected by topic: <code>research-ai-plus</code>. Updated on deploy.</p>
+      <div id="controls">
+        <input id="q" placeholder="Filter by name or description…" />
+        <select id="sort">
+          <option value="updated">Sort: Recently updated</option>
+          <option value="stars">Sort: Stars</option>
+          <option value="name">Sort: Name</option>
+        </select>
+      </div>
+    </header>
+    <main>
+      <div id="list" class="grid"></div>
+      <div id="empty" class="empty" style="display:none"></div>
+    </main>
+    <footer>
+      <div>Data source: GitHub Search API via GitHub Actions</div>
+    </footer>
+    <script>
+      const elList = document.getElementById('list');
+      const elEmpty = document.getElementById('empty');
+      const elQ = document.getElementById('q');
+      const elSort = document.getElementById('sort');
+
+      async function loadData() {
+        try {
+          const res = await fetch('data/repos.json', { cache: 'no-store' });
+          if (!res.ok) throw new Error('Data not found');
+          const raw = await res.json();
+          // Support both REST search (items) and GraphQL (nodes)
+          const items = raw.items || raw.nodes || [];
+          return items.map(mapRepo);
+        } catch (e) {
+          console.warn(e);
+          return [];
+        }
+      }
+
+      function mapRepo(r) {
+        // Normalize different API shapes
+        return {
+          name: r.name || (r.full_name?.split('/')?.pop()) || '',
+          fullName: r.full_name || r.nameWithOwner || '',
+          url: r.html_url || r.url || r.homepageUrl || '',
+          desc: r.description || '',
+          stars: r.stargazers_count ?? r.stargazerCount ?? 0,
+          updated: new Date(r.updated_at || r.updatedAt || 0).getTime(),
+          topics: (r.repositoryTopics?.nodes?.map(n => n.topic?.name) || r.topics || []).filter(Boolean)
+        };
+      }
+
+      function render(list) {
+        const q = (elQ.value || '').toLowerCase().trim();
+        const sort = elSort.value;
+
+        let filtered = list.filter(x => !q || x.fullName.toLowerCase().includes(q) || (x.desc || '').toLowerCase().includes(q));
+
+        if (sort === 'updated') filtered.sort((a,b)=>b.updated - a.updated);
+        if (sort === 'stars') filtered.sort((a,b)=>b.stars - a.stars);
+        if (sort === 'name') filtered.sort((a,b)=>a.fullName.localeCompare(b.fullName));
+
+        if (!filtered.length) {
+          elList.innerHTML = '';
+          elEmpty.style.display = 'block';
+          elEmpty.textContent = 'No repositories found. Ensure the workflow ran and repos have the topic "research-ai-plus".';
+          return;
+        }
+        elEmpty.style.display = 'none';
+        elList.innerHTML = filtered.map(card).join('');
+      }
+
+      function card(r) {
+        const updated = r.updated ? new Date(r.updated).toLocaleDateString() : '—';
+        const topics = (r.topics || []).slice(0, 6).map(t => `<span class="topic">${t}</span>`).join('');
+        return `
+          <article class="card">
+            <div>
+              <a href="${r.url}" target="_blank" rel="noopener">${r.fullName}</a>
+            </div>
+            <div>${r.desc ? r.desc.replace(/[<>]/g, '') : ''}</div>
+            <div class="meta">
+              <span>★ ${r.stars}</span>
+              <span>Updated ${updated}</span>
+            </div>
+            <div>${topics}</div>
+          </article>
+        `;
+      }
+
+      (async () => {
+        const data = await loadData();
+        render(data);
+        elQ.addEventListener('input', () => render(data));
+        elSort.addEventListener('change', () => render(data));
+      })();
+    </script>
+  </body>
+  </html>
+

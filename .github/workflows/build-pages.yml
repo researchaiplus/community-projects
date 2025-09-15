@@ -1,0 +1,78 @@
+name: Build and deploy Pages
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *"
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'site/**'
+      - '.github/workflows/build-pages.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Prepare site folder
+        run: |
+          mkdir -p site/data
+
+      - name: Fetch repositories by topic
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ORG: researchaiplus
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          ORG="${ORG:-$OWNER}"
+          echo "Using org: $ORG"
+          mkdir -p tmp site/data
+          # Fetch org repositories
+          curl -sS -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/search/repositories?q=org:$ORG+topic:research-ai-plus&per_page=100&sort=updated&order=desc" \
+            > tmp/_org.json
+          # Fetch user repositories from members.txt (optional)
+          if [ -f members.txt ]; then
+            while read -r user; do
+              user="${user%%#*}"; user="$(echo "$user" | xargs)"
+              [ -z "$user" ] && continue
+              echo "Fetching user: $user"
+              curl -sS -H "Authorization: Bearer $GH_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/search/repositories?q=user:$user+topic:research-ai-plus&per_page=100&sort=updated&order=desc" \
+                > "tmp/_user_${user}.json"
+            done < members.txt
+          fi
+          # Combine and dedupe by repo id
+          jq -s '{ items: (map(.items // []) | add | unique_by(.id)) }' tmp/*.json > site/data/repos.json
+          echo "Saved combined to site/data/repos.json"
+          rm -rf tmp
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

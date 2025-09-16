@@ -173,9 +173,14 @@ jobs:
         run: |
           set -euo pipefail
           NOW=$(date -u '+%Y-%m-%d %H:%M UTC')
-          KEYWORD="${KEYWORD:-um}"
+          # If no KEYWORD is provided, leave it empty and hide the matching line
+          KEYWORD="${KEYWORD:-}"
           TOTAL=$(jq '.items | length' site/data/repos.json)
-          UM=$(jq -r --arg kw "$KEYWORD" '[.items[] | select((((.full_name // "") + " " + (.name // "") + " " + (.description // "")) | ascii_downcase) | contains($kw)) ] | length' site/data/repos.json)
+          if [ -n "$KEYWORD" ]; then
+            UM=$(jq -r --arg kw "$KEYWORD" '[.items[] | select((((.full_name // "") + " " + (.name // "") + " " + (.description // "")) | ascii_downcase) | contains($kw)) ] | length' site/data/repos.json)
+          else
+            UM=""
+          fi
           TOPICS_TOTAL=$(jq -r '[.items[].topics[]?] | unique | length' site/data/repos.json)
           TOTAL_STARS=$(jq -r '[.items[].stargazers_count // 0] | add // 0' site/data/repos.json)
           MOST_JSON=$(jq -c '(.items | max_by(.stargazers_count // 0)) // {} | {name: .full_name, url: .html_url, stars: (.stargazers_count // 0)}' site/data/repos.json)
@@ -191,7 +196,9 @@ jobs:
             echo '## Repo Statistics'
             echo
             echo "- Repositories listed: $TOTAL"
-            echo "- Repositories matching \"$KEYWORD\": $UM"
+            if [ -n "$KEYWORD" ]; then
+              echo "- Repositories matching \"$KEYWORD\": $UM"
+            fi
             echo "- Unique topics: $TOPICS_TOTAL"
             echo "- Total stars: $TOTAL_STARS"
             echo "- Most-starred: [$MOST_NAME]($MOST_URL) • ★ $MOST_STARS"

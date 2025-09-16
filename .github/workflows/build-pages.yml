@@ -162,7 +162,7 @@ jobs:
             echo "- Updated in last 90 days: $LAST90"
             echo
             echo 'Most recently updated:'
-            jq -r '[.items[] | select(.updated_at) | {name: .full_name, url: .html_url, updated: (.updated_at | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime)}] | sort_by(-.updated) | .[:5] | map("- [\(.name)](\(.url)) • \(.updated | strftime(\"%Y-%m-%d\"))") | .[]' site/data/repos.json
+            jq -r '[.items[] | select(.updated_at) | {name: .full_name, url: .html_url, updated: (.updated_at | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime)}] | sort_by(.updated) | reverse | .[:5] | map("- [\(.name)](\(.url)) • \(.updated | strftime("%Y-%m-%d"))") | .[]' site/data/repos.json
             echo
             echo 'Top topics:'
             jq -r '[.items[].topics[]?] | sort | group_by(.) | map({topic: (.[0]), count: length}) | sort_by(-.count)[:10] | map("- \(.topic): \(.count)") | .[]' site/data/repos.json

@@ -92,19 +92,34 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p site/assets
-          # Build monthly cumulative series from created_at
-          jq -r '.items[].created_at // empty' site/data/repos.json | cut -c1-7 | sort | uniq -c | awk '{printf "%s %s\n", $2, $1}' > series.txt || true
+          # Build monthly series from created_at, filling missing months with zeroes
+          # Output format: "YYYY-MM count" for each month from min..max
+          jq -r '.items[].created_at // empty' site/data/repos.json \
+            | cut -c1-7 \
+            | sort \
+            | uniq -c \
+            | awk '
+                function idx(m,  a){ split(m,a,"-"); return a[1]*12 + a[2] - 1 }
+                function mon(i,  y,m){ y=int(i/12); m=(i%12)+1; return sprintf("%04d-%02d", y, m) }
+                { cnt[$2]=$1; ii=idx($2); if(!haveMin || ii<min){min=ii; haveMin=1} if(!haveMax || ii>max){max=ii; haveMax=1} }
+                END {
+                  if(!haveMin){ exit }
+                  for(i=min;i<=max;i++){ month=mon(i); printf "%s %d\n", month, (month in cnt? cnt[month]:0) }
+                }
+            ' > series.txt || true
           W=800; H=240; PL=48; PR=12; PT=20; PB=32
           if [ ! -s series.txt ]; then
             cat > site/assets/trend.svg <<SVG
             <svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}' viewBox='0 0 ${W} ${H}'>
               <rect x='0' y='0' width='${W}' height='${H}' fill='#ffffff'/>
-              <text x='${W/2}' y='${H/2}' text-anchor='middle' fill='#64748b' font-family='sans-serif' font-size='14'>No data</text>
+              <text x='$((W/2))' y='$((H/2))' text-anchor='middle' fill='#64748b' font-family='sans-serif' font-size='14'>No data</text>
             </svg>
           SVG
           else
             awk -v W=$W -v H=$H -v PL=$PL -v PR=$PR -v PT=$PT -v PB=$PB '
               { m[NR]=$1; v[NR]=$2; n=NR }
+              function monnum(s,  a){ split(s,a,"-"); return a[2]+0 }
+              function year(s,  a){ split(s,a,"-"); return a[1] }
               END {
                 if (n==0) exit
                 max=0; for(i=1;i<=n;i++){ s+=v[i]; c[i]=s; if(c[i]>max) max=c[i] }
@@ -118,9 +133,23 @@ jobs:
                 # Polyline points
                 points=""; for(i=1;i<=n;i++){ x=PL+step*(i-1); y=PT + (ph * (1 - (c[i]/max))); points=points sprintf("%s%.1f,%.1f", (i>1? " ":""), x, y) }
                 printf("<polyline fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2\" points=\"%s\"/>\n", points)
-                # Labels
-                printf("<text x=\"%d\" y=\"%d\" fill=\"#0f172a\" font-size=\"12\" font-family=\"sans-serif\" text-anchor=\"start\">%s</text>\n", PL, H-8, m[1])
-                printf("<text x=\"%d\" y=\"%d\" fill=\"#0f172a\" font-size=\"12\" font-family=\"sans-serif\" text-anchor=\"end\">%s</text>\n", W-PR, H-8, m[n])
+                # X-axis ticks and labels
+                for(i=1;i<=n;i++){
+                  x=PL+step*(i-1)
+                  mn=monnum(m[i]); yr=year(m[i])
+                  show=0; label=""
+                  if (n>36){ show=(mn==1); label=yr }
+                  else if (n>18){ show=(mn==1 || mn==4 || mn==7 || mn==10); label=m[i] }
+                  else {
+                    # Show ~5 evenly spaced labels including ends
+                    if (i==1 || i==n || (n>6 && ((i-1) % int((n-1)/4) == 0))) show=1
+                    label=m[i]
+                  }
+                  if (show){
+                    printf("<line x1=\"%.1f\" y1=\"%d\" x2=\"%.1f\" y2=\"%d\" stroke=\"#e5e7eb\"/>\n", x, H-PB, x, H-PB+4)
+                    printf("<text x=\"%.1f\" y=\"%d\" fill=\"#475569\" font-size=\"10\" font-family=\"sans-serif\" text-anchor=\"middle\">%s</text>\n", x, H-PB+16, label)
+                  }
+                }
                 printf("</svg>\n")
               }
             ' series.txt > site/assets/trend.svg

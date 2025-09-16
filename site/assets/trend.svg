@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="240" viewBox="0 0 800 240">
+<rect x="0" y="0" width="800" height="240" fill="#ffffff"/>
+<line x1="48" y1="208" x2="788" y2="208" stroke="#e5e7eb"/>
+<line x1="48" y1="20" x2="48" y2="208" stroke="#e5e7eb"/>
+<polyline fill="none" stroke="#2563eb" stroke-width="2" points="48.0,161.0 153.7,161.0 259.4,161.0 365.1,114.0 470.9,114.0 576.6,114.0 682.3,114.0 788.0,20.0"/>
+<line x1="48.0" y1="208" x2="48.0" y2="212" stroke="#e5e7eb"/>
+<text x="48.0" y="224" fill="#475569" font-size="10" font-family="sans-serif" text-anchor="middle">2023-12</text>
+<line x1="153.7" y1="208" x2="153.7" y2="212" stroke="#e5e7eb"/>
+<text x="153.7" y="224" fill="#475569" font-size="10" font-family="sans-serif" text-anchor="middle">2024-01</text>
+<line x1="259.4" y1="208" x2="259.4" y2="212" stroke="#e5e7eb"/>
+<text x="259.4" y="224" fill="#475569" font-size="10" font-family="sans-serif" text-anchor="middle">2024-02</text>
+<line x1="365.1" y1="208" x2="365.1" y2="212" stroke="#e5e7eb"/>
+<text x="365.1" y="224" fill="#475569" font-size="10" font-family="sans-serif" text-anchor="middle">2024-03</text>
+<line x1="470.9" y1="208" x2="470.9" y2="212" stroke="#e5e7eb"/>
+<text x="470.9" y="224" fill="#475569" font-size="10" font-family="sans-serif" text-anchor="middle">2024-04</text>
+<line x1="576.6" y1="208" x2="576.6" y2="212" stroke="#e5e7eb"/>
+<text x="576.6" y="224" fill="#475569" font-size="10" font-family="sans-serif" text-anchor="middle">2024-05</text>
+<line x1="682.3" y1="208" x2="682.3" y2="212" stroke="#e5e7eb"/>
+<text x="682.3" y="224" fill="#475569" font-size="10" font-family="sans-serif" text-anchor="middle">2024-06</text>
+<line x1="788.0" y1="208" x2="788.0" y2="212" stroke="#e5e7eb"/>
+<text x="788.0" y="224" fill="#475569" font-size="10" font-family="sans-serif" text-anchor="middle">2024-07</text>
+</svg>

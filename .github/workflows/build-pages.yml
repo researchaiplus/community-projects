@@ -130,6 +130,17 @@ jobs:
                 # Axes
                 printf("<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke=\"#e5e7eb\"/>\n", PL, H-PB, W-PR, H-PB)
                 printf("<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke=\"#e5e7eb\"/>\n", PL, PT, PL, H-PB)
+                # Y-axis ticks and labels
+                yticks=4; ystep=int((max + yticks - 1)/yticks); if(ystep<1) ystep=1
+                for (t=0; t<=max; t+=ystep) {
+                  yy=PT + (ph * (1 - (t/max)))
+                  # light horizontal gridline across plot area
+                  printf("<line x1=\"%d\" y1=\"%.1f\" x2=\"%d\" y2=\"%.1f\" stroke=\"#f1f5f9\"/>\n", PL, yy, W-PR, yy)
+                  # small tick on y-axis
+                  printf("<line x1=\"%d\" y1=\"%.1f\" x2=\"%d\" y2=\"%.1f\" stroke=\"#e5e7eb\"/>\n", PL-4, yy, PL, yy)
+                  # numeric label aligned to the left of axis
+                  printf("<text x=\"%d\" y=\"%.1f\" fill=\"#475569\" font-size=\"10\" font-family=\"sans-serif\" text-anchor=\"end\">%d</text>\n", PL-6, yy+3, t)
+                }
                 # Polyline points
                 points=""; for(i=1;i<=n;i++){ x=PL+step*(i-1); y=PT + (ph * (1 - (c[i]/max))); points=points sprintf("%s%.1f,%.1f", (i>1? " ":""), x, y) }
                 printf("<polyline fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2\" points=\"%s\"/>\n", points)

@@ -8,24 +8,25 @@
 <!-- STATS:START -->
 ## Repo Statistics
 
-- Repositories listed: 1
+- Repositories listed: 2
 - Repositories matching "um": 0
 - Unique topics: 1
-- Total stars: 0
-- Most-starred: [LizabethLi/markdown-to-wechat-converter](https://github.com/LizabethLi/markdown-to-wechat-converter) • ★ 0
+- Total stars: 21
+- Most-starred: [LizabethLi/Copy2Translate](https://github.com/LizabethLi/Copy2Translate) • ★ 21
 
 Recent updates:
-- Updated in last 7 days: 1
-- Updated in last 30 days: 1
-- Updated in last 90 days: 1
+- Updated in last 7 days: 2
+- Updated in last 30 days: 2
+- Updated in last 90 days: 2
 
 Most recently updated:
+- [LizabethLi/Copy2Translate](https://github.com/LizabethLi/Copy2Translate) • 2025-09-16
 - [LizabethLi/markdown-to-wechat-converter](https://github.com/LizabethLi/markdown-to-wechat-converter) • 2025-09-15
 
 Top topics:
-- research-ai-plus: 1
+- research-ai-plus: 2
 
-_Last updated: 2025-09-16 12:38 UTC
+_Last updated: 2025-09-16 12:43 UTC
 
 Repo growth over time:
 

@@ -9,7 +9,6 @@
 ## Repo Statistics
 
 - Repositories listed: 2
-- Repositories matching "um": 0
 - Unique topics: 1
 - Total stars: 21
 - Most-starred: [LizabethLi/Copy2Translate](https://github.com/LizabethLi/Copy2Translate) • ★ 21

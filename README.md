@@ -14,7 +14,7 @@
 - Most-starred: [LizabethLi/Copy2Translate](https://github.com/LizabethLi/Copy2Translate) • ★ 21
 
 Recent updates:
-- Updated in last 7 days: 2
+- Updated in last 7 days: 1
 - Updated in last 30 days: 2
 - Updated in last 90 days: 2
 
@@ -25,7 +25,7 @@ Most recently updated:
 Top topics:
 - research-ai-plus: 2
 
-_Last updated: 2025-09-23 12:25 UTC
+_Last updated: 2025-09-23 18:19 UTC
 
 Repo growth over time:
 

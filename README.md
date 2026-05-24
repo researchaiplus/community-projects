@@ -10,8 +10,8 @@
 
 - Repositories listed: 2
 - Unique topics: 1
-- Total stars: 65
-- Most-starred: [LizabethLi/markdown-to-wechat-converter](https://github.com/LizabethLi/markdown-to-wechat-converter) • ★ 45
+- Total stars: 67
+- Most-starred: [LizabethLi/markdown-to-wechat-converter](https://github.com/LizabethLi/markdown-to-wechat-converter) • ★ 47
 
 Recent updates:
 - Updated in last 7 days: 1
@@ -19,13 +19,13 @@ Recent updates:
 - Updated in last 90 days: 2
 
 Most recently updated:
-- [LizabethLi/markdown-to-wechat-converter](https://github.com/LizabethLi/markdown-to-wechat-converter) • 2026-05-23
+- [LizabethLi/markdown-to-wechat-converter](https://github.com/LizabethLi/markdown-to-wechat-converter) • 2026-05-24
 - [LizabethLi/Copy2Translate](https://github.com/LizabethLi/Copy2Translate) • 2026-04-23
 
 Top topics:
 - research-ai-plus: 2
 
-_Last updated: 2026-05-23 18:19 UTC
+_Last updated: 2026-05-24 00:33 UTC
 
 Repo growth over time:
 

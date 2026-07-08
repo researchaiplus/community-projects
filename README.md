@@ -14,7 +14,7 @@
 - Most-starred: [LizabethLi/markdown-to-wechat-converter](https://github.com/LizabethLi/markdown-to-wechat-converter) • ★ 48
 
 Recent updates:
-- Updated in last 7 days: 1
+- Updated in last 7 days: 0
 - Updated in last 30 days: 1
 - Updated in last 90 days: 2
 
@@ -25,7 +25,7 @@ Most recently updated:
 Top topics:
 - research-ai-plus: 2
 
-_Last updated: 2026-07-08 01:59 UTC
+_Last updated: 2026-07-08 08:12 UTC
 
 Repo growth over time:
 

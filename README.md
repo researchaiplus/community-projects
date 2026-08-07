@@ -14,18 +14,18 @@
 - Most-starred: [LizabethLi/markdown-to-wechat-converter](https://github.com/LizabethLi/markdown-to-wechat-converter) • ★ 48
 
 Recent updates:
-- Updated in last 7 days: 0
-- Updated in last 30 days: 0
+- Updated in last 7 days: 1
+- Updated in last 30 days: 1
 - Updated in last 90 days: 1
 
 Most recently updated:
-- [LizabethLi/markdown-to-wechat-converter](https://github.com/LizabethLi/markdown-to-wechat-converter) • 2026-07-01
+- [LizabethLi/markdown-to-wechat-converter](https://github.com/LizabethLi/markdown-to-wechat-converter) • 2026-08-07
 - [LizabethLi/Copy2Translate](https://github.com/LizabethLi/Copy2Translate) • 2026-04-23
 
 Top topics:
 - research-ai-plus: 2
 
-_Last updated: 2026-08-07 02:14 UTC
+_Last updated: 2026-08-07 07:02 UTC
 
 Repo growth over time:
 
